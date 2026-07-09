@@ -1,0 +1,22 @@
+name: Security Scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci-injection:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      models: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for CI injection vulnerabilities
+        uses: sfc-gh-rwincey/ci-injection-scanner@main
+        with:
+          path: '.'
+          fail-on-severity: 'HIGH'
+          use-llm-judge: 'true'
